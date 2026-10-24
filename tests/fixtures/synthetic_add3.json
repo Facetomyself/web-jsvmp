@@ -1,0 +1,10 @@
+{
+  "bytecode_hex": "0200010300000010ff",
+  "description": "Synthetic test VM only: return arg0 + 3",
+  "claim_scope": "fixture-only",
+  "fixtures": [
+    {"args": [7], "expected": 10},
+    {"args": [-3], "expected": 0},
+    {"args": [2147483647], "expected": 2147483650}
+  ]
+}

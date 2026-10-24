@@ -1,0 +1,33 @@
+{
+  "dispatch_evidence": {
+    "request_anchor": {"method": "POST", "path": "/api/example", "field": "sig"},
+    "script_sha256": "sha256:<redacted>",
+    "shape": "switch",
+    "basis": "runtime-observation",
+    "limits": ["未确认 opcode 语义"]
+  },
+  "dynamic_code_trace": {
+    "generation": [],
+    "writes": [],
+    "path_bytes": [],
+    "limits": ["无动态生成证据"]
+  },
+  "layer_boundary": {
+    "current": "outer-vm",
+    "input": "shape:<redacted>",
+    "output": "shape:<redacted>",
+    "module_sha256": null,
+    "fingerprint": [],
+    "stop_reason": "needs-opcode"
+  },
+  "observation_integrity": {
+    "baseline_id": "fixture:<redacted>",
+    "probe_id": "probe:<redacted>",
+    "pause_ms": {"count": 0, "max": 0},
+    "trace_dropped": 0,
+    "anti_debug": [],
+    "request_diff": {"method": false, "url": false, "headers": "unknown", "body_length": false, "response": "unknown"},
+    "status": "unknown"
+  },
+  "limits": ["示例仅说明附件形状，不是目标事实"]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized JSVMP Trace Event",
+  "type": "object",
+  "required": ["schema_version", "run_id", "source_sha256", "vm_id", "seq", "pc", "opcode", "operands", "stack_before", "stack_after"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "vm_id": {"type": "string", "minLength": 1},
+    "seq": {"type": "integer", "minimum": 0},
+    "pc": {"type": "integer", "minimum": 0},
+    "opcode": {"type": "string", "minLength": 1},
+    "operands": {"type": "array"},
+    "stack_before": {"type": "array"},
+    "stack_after": {"type": "array"},
+    "hostCalls": {"type": "array"},
+    "writes": {"type": "array"},
+    "branchTaken": {"type": ["boolean", "null"]},
+    "timestampNs": {"type": ["integer", "null"]}
+  },
+  "additionalProperties": false
+}

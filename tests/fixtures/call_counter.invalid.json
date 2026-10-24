@@ -1,0 +1,8 @@
+{
+  "purpose": "Synthetic call-counter receipt; deliberately not an opcode trace",
+  "duration_ms": 1000,
+  "reflect_apply_count_approx": 100000,
+  "request_observed": false,
+  "opcode_events_present": false,
+  "claim_scope": "negative-adapter-regression-only"
+}

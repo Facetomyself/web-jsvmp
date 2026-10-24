@@ -1,0 +1,29 @@
+name: Toolchain tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run standalone tests
+        run: python -m unittest discover -s tests -v
+      - name: Check CLI and adapter syntax
+        run: |
+          python scripts/jsvmp_toolchain.py --help
+          node --check scripts/probe_adapter.js

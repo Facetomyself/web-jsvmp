@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "label": "Illustrative custom byte encoding mapped to bounded semantic primitives",
+  "opcodes": [
+    {"name": "ARG", "byte": 128, "semantic": "LOAD_ARG", "operands": ["u8"]},
+    {"name": "I32", "byte": 129, "semantic": "PUSH_I32", "operands": ["i32le"]},
+    {"name": "PLUS", "byte": 130, "semantic": "ADD", "operands": []},
+    {"name": "RETURN", "byte": 255, "semantic": "RET", "operands": []}
+  ],
+  "limitations": ["synthetic encoding example", "does not describe any protected target", "codegen only supports canonical operations implemented by this tool"]
+}

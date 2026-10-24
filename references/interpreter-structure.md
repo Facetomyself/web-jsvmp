@@ -1,0 +1,27 @@
+# 解释器分型
+
+只记录这台 Web VM 的形态。不填 `opcodes`，不把教学口算当成字节码布局。
+
+可选宿主知识库引用（`article/` 不随本仓库发布；缺失时使用本文件的独立说明）：知识来源是 `article/web-reverse/jsvmp-custom-isa-interpreter-reference.md`。该文未复现，没有 opcode 表，也没有可粘贴的解释器。条数、立即数宽度和池里的字面量若前后不一致，不采用。
+
+## 按缺口读一个执行分支
+
+- 尚未定位目标参数的 VM 入口：读 [request-dispatcher.md](request-dispatcher.md)。
+- 解释器已定位但算法所在层不明：读 [layer-fingerprint.md](layer-fingerprint.md)。
+- 静态代码与运行时解释器不一致：将动态代码缺口回填父 facts，由 next 选择 `chaos-vm-instrument`；不在本阶段直接改写字节码。
+
+分支证据归本阶段，不增加 blocker 或并行状态机。
+
+## 要记下的字段
+
+- 机器：栈、寄存器，或算术走栈、常量/返回值走寄存器的混合形态。
+- 状态：虚拟程序计数、栈指针、寄存器、调用栈和当前帧。分发器不要写成采集框架里的调度器。
+- 分发三选一，并写依据：状态选择、表驱动、线性一次派发。动态改映射只记「会增加组合」，不记未核对的数字。
+- 池：出现常数、字符串或多个函数时，才记常数池、字符串池、函数表是否存在。
+- 编码：记下观察到的端序和操作数宽度依据。教学文里的「一字符一字节、低位在前」只属于那篇教学样本。
+
+解释循环的顺序是：进入、初始化、检查上下文、按虚拟程序计数取指、解码、分发、执行。静态 switch 的 case 数不是覆盖率。
+
+## 停止
+
+分型写完仍不能做 opcode 验收。有带操作数或栈值的 Trace 和 fixture 之后，回父 `web_case.py next`；只有其给出 `deobfuscation_gate`，且 gate profile 为 `jsvm-verifiable`、next_skill 为 `web-jsvmp` 后，才按 handoff 进入 [opcode-recovery.md](opcode-recovery.md)。仅设置 `opcodeEvidence=true` 不是 gate 证据。
