@@ -14,10 +14,12 @@ description: Web VMP / JSVMP 专用叶。父级 next 在 JS VM 挡住当前步�
 主线程只读本节；执行切片遵循 `docs/agent-architecture.md` 的「子代理」和「主动拆分」。只读本次命中的阶段 reference，不展开其他分支。
 
 - 这是 Web/JS 自定义虚拟机的唯一叶，目录名保持 `web-jsvmp`，因为 gate 的 `next_skill` 指向它。看见 VM 形态不进入本 skill。当前步骤被 JS VM 挡住时，`web_case.py next` 给出一个 `readRef`：无 opcode 证据是 `route_web_jsvmp`，有 opcode 证据才是 `deobfuscation_gate`。直接命中本 skill 时仍先恢复上游 case，不绕过门禁。
-- 一次只读 `next` 点名的阶段 reference；命中该文列出的明确触发条件时，再读对应的一个子 reference，产物仍归原阶段。做完回到 `web_case.py next`。不按下面的表从上到下做。`jsvmBlocker` 可写成 `host-primitive`、`interpreter-structure`、`chaos-vm-instrument`、`opcode-recovery` 或 `variant-failure`；未写且没有 opcode 证据时默认解释器分型。opcode 验收仍要求分类 profile 为 `jsvm-verifiable`，并读共享 `skill/web-deobfuscation/references/case-contract.md` 的当前 profile。
+- 一次只读 `next` 点名的阶段 reference；命中该文列出的明确触发条件时，再读对应的一个子 reference，产物仍归原阶段。做完回到 `web_case.py next`。不按下面的表从上到下做。`jsvmBlocker` 可写成 `host-primitive`、`interpreter-structure`、`chaos-vm-instrument`、`opcode-recovery`、`variant-failure` 或 `ws-app-protocol`；未写且没有 opcode 证据时默认解释器分型。opcode 验收仍要求分类 profile 为 `jsvm-verifiable`，并读共享 `skill/web-deobfuscation/references/case-contract.md` 的当前 profile。
 - 回填 `deobfuscation=pass` 必须先有共享 validator 的 `chain_accepted=true`。宿主原语闭合、解释器分型、插桩笔记和失败谱系都不能单独当成叶成功。
 - 回程交回 manifest、validation report、限制与原句柄，返回 `web-reverse` 的 `web_case.py next`。本 skill 不启动补环境或协议交付。
 - 外部项目只按 [external-tools.md](references/external-tools.md) 当方法或可选工作站。不把无许可证或 AGPL 源码复制进仓库，也不把保护器当还原器。
+
+失败边界不在取指/分发/状态三者中时（例如升级已成功、应用帧未对齐），`jsvmBlocker` 可能不适用；先回父 `web_case.py next` 重判边界，不要硬套 VM 阶段。
 
 ## 输入
 
@@ -32,8 +34,9 @@ description: Web VMP / JSVMP 专用叶。父级 next 在 JS VM 挡住当前步�
 | `chaos-vm-instrument` | [chaos-vm-instrument.md](references/chaos-vm-instrument.md) | 用插桩给现有 trace/fixture 补观察，不单开验收；动态生成或自修改字节码读 [dynamic-bytecode.md](references/dynamic-bytecode.md)，低扰动与反调试读 [observation-integrity.md](references/observation-integrity.md) |
 | `opcode-recovery` | [opcode-recovery.md](references/opcode-recovery.md) + [toolchain.md](references/toolchain.md) | Gate 已给出带操作数或栈值的 opcode Trace 与 fixture |
 | `variant-failure` | [variant-failure.md](references/variant-failure.md) | 同一动态资源多轮失败，或修复后换了样本才通过 |
+| `ws-app-protocol` | [ws-frame-protocol.md](references/ws-frame-protocol.md) | 升级已成功，但 WebSocket/二进制帧的 cmd 协议、codec 或 key 来源未对齐 |
 
-表中仅有 dispatcher 接受的 5 个 `jsvmBlocker`。`layer-fingerprint` 不是合法 blocker，由 `host-primitive` 或 `interpreter-structure` 在算法所在层不明时按需读取；不要向父 facts 填此值。
+表中 dispatcher 接受 6 个 `jsvmBlocker`。`layer-fingerprint` 不是合法 blocker，由 `host-primitive` 或 `interpreter-structure` 在算法所在层不明时按需读取；不要向父 facts 填此值。
 
 按命中的那一份 reference 执行。`request-dispatcher`、`dynamic-bytecode`、`layer-fingerprint` 和 `observation-integrity` 是现有阶段的执行分支，不新增第二套 case 或状态机；完成后回填原阶段产物。
 
