@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "独立工具链：双轨输入与证据汇合",
+    "locale": "zh-CN",
+    "output": ".archify/dataflow-readme-20261024-104359/pipeline.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Facetomyself/web-jsvmp.git",
+      "revision": "d079128acca1d2c738925aa58960db8a8f8f0f37",
+      "provider": "github",
+      "link_mode": "web"
+    },
+    "viewBox": [
+      1080,
+      650
+    ],
+    "legend": {
+      "entries": {
+        "security": {
+          "label": "身份绑定"
+        },
+        "default": {
+          "label": "静态产物"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "显式输入"
+    },
+    {
+      "label": "校验与生成"
+    },
+    {
+      "label": "证据文件"
+    },
+    {
+      "label": "独立校验"
+    },
+    {
+      "label": "有限结论"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "probe",
+      "type": "external",
+      "label": "目标专用 Hook",
+      "sublabel": "显式调用 TraceAdapter",
+      "stage": 0,
+      "row": 0,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/probe_adapter.js",
+          "line": 1,
+          "end_line": 6
+        }
+      ]
+    },
+    {
+      "id": "normalize",
+      "type": "security",
+      "label": "normalize",
+      "sublabel": "事件 + 完整性 receipt",
+      "stage": 1,
+      "row": 0,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 82,
+          "end_line": 114
+        }
+      ]
+    },
+    {
+      "id": "trace",
+      "type": "database",
+      "label": "normalized.json",
+      "sublabel": "同源 / 同 VM / 同运行",
+      "stage": 2,
+      "row": 0,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 107,
+          "end_line": 114
+        }
+      ]
+    },
+    {
+      "id": "align",
+      "type": "backend",
+      "label": "align",
+      "sublabel": "Trace 与静态指令逐条核对",
+      "stage": 3,
+      "row": 0,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 242,
+          "end_line": 260
+        }
+      ]
+    },
+    {
+      "id": "alignment",
+      "type": "database",
+      "label": "alignment.json",
+      "sublabel": "只证明指令对齐",
+      "stage": 4,
+      "row": 0,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 258,
+          "end_line": 260
+        }
+      ]
+    },
+    {
+      "id": "bytecode",
+      "type": "database",
+      "label": "字节码 + ISA",
+      "sublabel": "显式输入；非 Trace 自动推导",
+      "stage": 0,
+      "row": 2,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 117,
+          "end_line": 150
+        }
+      ]
+    },
+    {
+      "id": "lift",
+      "type": "backend",
+      "label": "lift",
+      "sublabel": "decode → CFG → emitter",
+      "stage": 1,
+      "row": 2,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 324,
+          "end_line": 329
+        }
+      ]
+    },
+    {
+      "id": "bundle",
+      "type": "database",
+      "label": "三个输出文件",
+      "sublabel": "disassembly / cfg / lifted.js",
+      "stage": 2,
+      "row": 2,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 325,
+          "end_line": 329
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "type": "backend",
+      "label": "run",
+      "sublabel": "在 Node 中执行生成的 JS",
+      "stage": 3,
+      "row": 2,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 290,
+          "end_line": 299
+        }
+      ]
+    },
+    {
+      "id": "parity",
+      "type": "database",
+      "label": "parity.json",
+      "sublabel": "仅限所给 fixture 的结果",
+      "stage": 4,
+      "row": 2,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 297,
+          "end_line": 299
+        }
+      ]
+    },
+    {
+      "id": "fixture",
+      "type": "database",
+      "label": "脱敏 fixture",
+      "sublabel": "args + expected",
+      "stage": 2,
+      "row": 3,
+      "width": 130,
+      "height": 78,
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 290,
+          "end_line": 293
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "events",
+      "from": "probe",
+      "to": "normalize",
+      "label": "事件 + 回执",
+      "variant": "emphasis"
+    },
+    {
+      "id": "normalized",
+      "from": "normalize",
+      "to": "trace",
+      "label": "校验后保存",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dynamic",
+      "from": "trace",
+      "to": "align",
+      "label": "动态事件",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "report",
+      "from": "align",
+      "to": "alignment",
+      "label": "差异与覆盖",
+      "variant": "emphasis"
+    },
+    {
+      "id": "declared",
+      "from": "bytecode",
+      "to": "lift",
+      "label": "hex + --isa",
+      "variant": "default"
+    },
+    {
+      "id": "outputs",
+      "from": "lift",
+      "to": "bundle",
+      "label": "写入文件",
+      "variant": "default"
+    },
+    {
+      "id": "static",
+      "from": "bundle",
+      "to": "align",
+      "label": "disassembly + 身份",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [
+          530,
+          280
+        ],
+        [
+          745,
+          280
+        ]
+      ],
+      "labelAt": [
+        638,
+        266
+      ]
+    },
+    {
+      "id": "generated",
+      "from": "bundle",
+      "to": "run",
+      "label": "lifted.js",
+      "variant": "default",
+      "route": "straight"
+    },
+    {
+      "id": "inputs",
+      "from": "fixture",
+      "to": "run",
+      "label": "fixture",
+      "variant": "default"
+    },
+    {
+      "id": "parity-out",
+      "from": "run",
+      "to": "parity",
+      "label": "hash 绑定报告",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "动态与静态不是自动串联",
+      "items": [
+        "normalize 的输出不被 lift 读取；lift 只读取字节码和已声明 ISA。",
+        "align 汇合 normalized trace 与 disassembly，并要求显式运行身份。"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "边界清楚，拒绝猜测",
+      "items": [
+        "Hook 定位和 ISA 映射由使用者提供；未知 opcode、截断或栈深不一致应停止。",
+        "对齐不等于语义恢复；fixture parity 不等于全输入等价或服务端验收。"
+      ]
+    }
+  ]
+}

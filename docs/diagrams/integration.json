@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "宿主集成：路由、验收与回填的所有权",
+    "locale": "zh-CN",
+    "output": ".archify/sequence-readme-20261024-104359/integration.html",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "repository": {
+      "url": "https://github.com/Facetomyself/web-jsvmp.git",
+      "revision": "d079128acca1d2c738925aa58960db8a8f8f0f37",
+      "provider": "github",
+      "link_mode": "web"
+    },
+    "legend": {
+      "entries": {
+        "security": {
+          "label": "准入与验收"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "agent",
+      "type": "external",
+      "label": "执行 Agent",
+      "sublabel": "证据所有者",
+      "sources": [
+        {
+          "path": "SKILL.md",
+          "line": 52,
+          "end_line": 60
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "type": "backend",
+      "label": "宿主 next",
+      "sublabel": "外部 dispatcher",
+      "sources": [
+        {
+          "path": "SKILL.md",
+          "line": 14,
+          "end_line": 19
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "宿主 gate",
+      "sublabel": "外部分类型准入",
+      "sources": [
+        {
+          "path": "SKILL.md",
+          "line": 16,
+          "end_line": 24
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "type": "backend",
+      "label": "web-jsvmp",
+      "sublabel": "本仓阶段与工具",
+      "sources": [
+        {
+          "path": "SKILL.md",
+          "line": 28,
+          "end_line": 40
+        }
+      ]
+    },
+    {
+      "id": "validator",
+      "type": "security",
+      "label": "宿主 validator",
+      "sublabel": "外部结构 / hash 验证",
+      "sources": [
+        {
+          "path": "SKILL.md",
+          "line": 44,
+          "end_line": 54
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 350,
+      "label": "早期分支：缺少 opcode 时按阻碍取证"
+    },
+    {
+      "from": 380,
+      "to": 585,
+      "label": "opcode 分支：证据齐备后才走 gate"
+    },
+    {
+      "from": 625,
+      "to": 790,
+      "label": "验收与回程：Agent 显式回填"
+    }
+  ],
+  "messages": [
+    {
+      "id": "ask",
+      "from": "agent",
+      "to": "next",
+      "y": 170,
+      "label": "恢复 case；请求 next",
+      "variant": "emphasis"
+    },
+    {
+      "id": "early-route",
+      "from": "next",
+      "to": "agent",
+      "y": 210,
+      "label": "无 opcode：返回 action / readRef",
+      "variant": "return"
+    },
+    {
+      "id": "early",
+      "from": "agent",
+      "to": "skill",
+      "y": 250,
+      "label": "显式执行点名的单个早期阶段",
+      "variant": "default"
+    },
+    {
+      "id": "early-return",
+      "from": "skill",
+      "to": "agent",
+      "y": 290,
+      "label": "返回阶段证据，不声明 pass",
+      "variant": "return"
+    },
+    {
+      "id": "early-reenter",
+      "from": "agent",
+      "to": "next",
+      "y": 330,
+      "label": "显式回填，再请求 next",
+      "variant": "default"
+    },
+    {
+      "id": "gate-action",
+      "from": "next",
+      "to": "agent",
+      "y": 400,
+      "label": "opcode 已备：返回 gate action",
+      "variant": "return"
+    },
+    {
+      "id": "opcode-gate",
+      "from": "agent",
+      "to": "gate",
+      "y": 440,
+      "label": "显式调用分类 gate",
+      "variant": "security"
+    },
+    {
+      "id": "gate-return",
+      "from": "gate",
+      "to": "agent",
+      "y": 480,
+      "label": "jsvm-verifiable + gate pointer",
+      "variant": "return"
+    },
+    {
+      "id": "invoke",
+      "from": "agent",
+      "to": "skill",
+      "y": 520,
+      "label": "按 gate 执行有界 opcode 恢复",
+      "variant": "emphasis"
+    },
+    {
+      "id": "artifacts",
+      "from": "skill",
+      "to": "agent",
+      "y": 560,
+      "label": "产物 + 真实 parity + 限制",
+      "variant": "return"
+    },
+    {
+      "id": "validate",
+      "from": "agent",
+      "to": "validator",
+      "y": 650,
+      "label": "提交 manifest + gate",
+      "variant": "security"
+    },
+    {
+      "id": "accepted",
+      "from": "validator",
+      "to": "agent",
+      "y": 700,
+      "label": "检查 chain_accepted=true",
+      "variant": "return"
+    },
+    {
+      "id": "record",
+      "from": "agent",
+      "to": "next",
+      "y": 760,
+      "label": "仅接受后显式回填 pass；再 next",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "不是固定流水线",
+      "items": [
+        "早期分支与 opcode 分支是条件路径，不是每次从上到下执行。",
+        "当前阶段产物返回 next，由宿主选择后续动作。",
+        "next 只返回 action / readRef；叶执行与 gate 调用均由 Agent 显式发起。"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "宿主是可选外部依赖",
+      "items": [
+        "next、gate、validator 不随本仓库发布；图示依据 SKILL 集成合同。",
+        "validator 检查结构与 hash 绑定，不重算语义；真实对拍由证据生产者负责。"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "独立工具不能写宿主成功状态",
+      "items": [
+        "只有 chain_accepted=true 后，证据所有者才能显式回填 deobfuscation=pass。",
+        "本 skill 不自动启动补环境、协议交付或服务端验收。"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "web-jsvmp · 工具链总体架构",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Facetomyself/web-jsvmp.git",
+      "revision": "d079128acca1d2c738925aa58960db8a8f8f0f37",
+      "provider": "github",
+      "link_mode": "web"
+    },
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "backend": {
+          "label": "处理模块"
+        },
+        "security": {
+          "label": "校验模块"
+        },
+        "database": {
+          "label": "证据产物"
+        },
+        "external": {
+          "label": "外部输入"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "targetHook",
+      "type": "external",
+      "label": "目标专用 Hook",
+      "sublabel": "外部实现；提供 VM 现场",
+      "pos": [
+        35,
+        65
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/probe_adapter.js",
+          "line": 1,
+          "end_line": 4
+        }
+      ]
+    },
+    {
+      "id": "adapter",
+      "type": "backend",
+      "label": "TraceAdapter",
+      "sublabel": "限额事件与完整性 receipt",
+      "pos": [
+        350,
+        65
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/probe_adapter.js",
+          "line": 6,
+          "end_line": 55
+        }
+      ]
+    },
+    {
+      "id": "normalizer",
+      "type": "security",
+      "label": "Trace Normalizer",
+      "sublabel": "身份绑定与采集完整性校验",
+      "pos": [
+        665,
+        65
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 82,
+          "end_line": 114
+        }
+      ]
+    },
+    {
+      "id": "bytecode",
+      "type": "external",
+      "label": "字节码与 ISA 映射",
+      "sublabel": "显式输入；仅支持受限语义",
+      "pos": [
+        35,
+        285
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 117,
+          "end_line": 150
+        },
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 307,
+          "end_line": 313
+        }
+      ]
+    },
+    {
+      "id": "decoder",
+      "type": "backend",
+      "label": "Bytecode Decoder",
+      "sublabel": "指令宽度与跳转目标检查",
+      "pos": [
+        350,
+        285
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 153,
+          "end_line": 192
+        }
+      ]
+    },
+    {
+      "id": "aligner",
+      "type": "security",
+      "label": "Trace Alignment",
+      "sublabel": "逐项对齐 PC / opcode / operands",
+      "pos": [
+        665,
+        285
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 242,
+          "end_line": 260
+        }
+      ]
+    },
+    {
+      "id": "alignReport",
+      "type": "database",
+      "label": "Alignment Report",
+      "sublabel": "仅证明已观察指令的一致性",
+      "pos": [
+        980,
+        285
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 260,
+          "end_line": 260
+        },
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 322,
+          "end_line": 323
+        }
+      ]
+    },
+    {
+      "id": "lifter",
+      "type": "backend",
+      "label": "CFG 与 JS Emitter",
+      "sublabel": "栈深与合流检查；生成受限 JS",
+      "pos": [
+        350,
+        505
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 195,
+          "end_line": 239
+        },
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 272,
+          "end_line": 287
+        },
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 324,
+          "end_line": 329
+        }
+      ]
+    },
+    {
+      "id": "runner",
+      "type": "backend",
+      "label": "Node Fixture Runner",
+      "sublabel": "执行生成 JS；绑定两端 hash",
+      "pos": [
+        665,
+        505
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 290,
+          "end_line": 299
+        }
+      ]
+    },
+    {
+      "id": "fixtures",
+      "type": "external",
+      "label": "脱敏 Fixtures",
+      "sublabel": "args 与 expected 显式给定",
+      "pos": [
+        980,
+        505
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 290,
+          "end_line": 294
+        }
+      ]
+    },
+    {
+      "id": "parityReport",
+      "type": "database",
+      "label": "Fixture Parity Report",
+      "sublabel": "fixture-only；非服务端验收",
+      "pos": [
+        665,
+        725
+      ],
+      "size": [
+        205,
+        76
+      ],
+      "sources": [
+        {
+          "path": "scripts/jsvmp_toolchain.py",
+          "line": 297,
+          "end_line": 299
+        },
+        {
+          "path": "SKILL.md",
+          "line": 48,
+          "end_line": 54
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "observe",
+      "from": "targetHook",
+      "to": "adapter",
+      "label": "提供现场",
+      "variant": "emphasis"
+    },
+    {
+      "id": "capture",
+      "from": "adapter",
+      "to": "normalizer",
+      "label": "事件 + receipt",
+      "variant": "emphasis"
+    },
+    {
+      "id": "readcode",
+      "from": "bytecode",
+      "to": "decoder",
+      "label": "hex + --isa"
+    },
+    {
+      "id": "normalized",
+      "from": "normalizer",
+      "to": "aligner",
+      "label": "规范化事件",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "static",
+      "from": "decoder",
+      "to": "aligner",
+      "label": "disassembly"
+    },
+    {
+      "id": "alignment",
+      "from": "aligner",
+      "to": "alignReport",
+      "label": "写入报告"
+    },
+    {
+      "id": "lift",
+      "from": "decoder",
+      "to": "lifter",
+      "label": "解码指令",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "generated",
+      "from": "lifter",
+      "to": "runner",
+      "label": "lifted.js",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fixture",
+      "from": "fixtures",
+      "to": "runner",
+      "label": "输入 / 预期值"
+    },
+    {
+      "id": "parity",
+      "from": "runner",
+      "to": "parityReport",
+      "label": "写入对拍报告",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "采集与恢复是两条输入链",
+      "items": [
+        "Normalizer 不向 lift 提供字节码；采集与解码在 align 汇合。",
+        "Hook 和 sink 由集成方提供；Adapter 不自动定位解释器。"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "受限语义，不猜未知指令",
+      "items": [
+        "内置 9 类 canonical 操作；目标 ISA 必须显式映射。",
+        "CFG 检查静态栈深；JS emitter 输出有步数上限的 switch。"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "验证范围保持分层",
+      "items": [
+        "Alignment 只证明观察过的指令对齐；fixtures 只证明指定输入。",
+        "宿主 gate / validator 与服务端验收不属于本仓工具链。"
+      ]
+    }
+  ]
+}
