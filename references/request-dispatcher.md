@@ -16,6 +16,14 @@
 
 常见形态是静态 `switch`、`handlers[op]` 表、threaded/闭包续接和多层 wrapper。热点函数、case 数量或“大数组”只能当线索，必须用请求触发次数、取指点和状态变化交叉确认。
 
+## S1b：凭据来源闭环
+
+列出目标请求的全部凭据来源（Cookie、Authorization、自定义头、URL 参数），并对照宿主 runtime 实际写入/读取点：
+
+- 每个凭据一条链：宿主写入点 → 存储 → 目标请求头/参数；
+- 链路缺一环就记一个缺口，不缺不标；
+- WebSocket upgrade 与 HTTP API 分开对照，upgrade 头与应用层帧不是同一层。
+
 ## 最小证据
 
 把以下 JSON 作为 `dispatch_evidence` 附件，不写入共享 manifest：

@@ -22,6 +22,16 @@
 
 解释循环的顺序是：进入、初始化、检查上下文、按虚拟程序计数取指、解码、分发、执行。静态 switch 的 case 数不是覆盖率。
 
+## 全局导出清单
+
+分型完成后、停止之前，固定执行一次「全局导出侦察」：
+
+- 枚举本次加载触达的所有可达 realm（页面、Worker、iframe、VM sandbox）的全局符号；
+- 过滤内建与混淆器样板，记录可疑函数的名字、参数个数、行为摘要（一次最小调用或静态读）；
+- 结果为空也必须记一行「已查无全局导出」，写进本阶段附件。
+
+分型完成不等于边界闭合。全局导出是算法工具箱最常见的落点，先扫再停。
+
 ## 停止
 
 分型写完仍不能做 opcode 验收。有带操作数或栈值的 Trace 和 fixture 之后，回父 `web_case.py next`；只有其给出 `deobfuscation_gate`，且 gate profile 为 `jsvm-verifiable`、next_skill 为 `web-jsvmp` 后，才按 handoff 进入 [opcode-recovery.md](opcode-recovery.md)。仅设置 `opcodeEvidence=true` 不是 gate 证据。
