@@ -51,6 +51,10 @@ python scripts/jsvmp_toolchain.py run "<case-output>/lifted.js" "<fixture.json>"
 
 非零或 `passed=false` 不得升级。将 decoder/lifted output、runtime trace、fixture 和实际 parity report 收拢到原共享 manifest，仍通过 `web-deobfuscation` gate 与 validator。不要把 `fixture-only` 改写为 `request_parity` 已完成，除非另有真实请求边界对照。
 
+### Optional phase artifact records
+
+The additive `symexec` / `irfix` / `wasm-stage9` record interfaces are documented in [phase-extensions.md](phase-extensions.md). Validate them with `python scripts/phase_contracts.py <record.json>`. This validator checks record shape and declared hash links only; it does not add a toolchain command, alter these existing commands, execute an external engine, or prove semantics. The phases are optional side artifacts, not new dispatcher states.
+
 ## 阶段回执
 
 `stage` 一次只做下表中的一个名字。它不写宿主 manifest，也不写 `chain_accepted`。

@@ -32,6 +32,20 @@ class ToolchainTests(unittest.TestCase):
         with self.assertRaisesRegex(tool.ToolchainError, "truncated PUSH_I32"):
             tool.decode("01ff")
 
+    def test_failed_lift_retains_old_outputs_without_reporting_new_success(self):
+        with tempfile.TemporaryDirectory() as td:
+            output = Path(td) / "lifted"
+            command = [sys.executable, str(SCRIPT), "lift"]
+            subprocess.run(command + ["0200010100000010ff", "--out-dir", str(output)],
+                           check=True, capture_output=True, text=True, encoding="utf-8")
+            previous = {p.name: p.read_bytes() for p in output.iterdir()}
+            failed = subprocess.run(command + ["7e", "--out-dir", str(output)],
+                                    capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(2, failed.returncode)
+            self.assertEqual("", failed.stdout)
+            self.assertEqual("insufficient-evidence-or-error", json.loads(failed.stderr)["status"])
+            self.assertEqual(previous, {p.name: p.read_bytes() for p in output.iterdir()})
+
     def test_custom_opcode_encoding_maps_to_semantic_profile(self):
         with tempfile.TemporaryDirectory() as td:
             isa_path=Path(td)/"isa.json"

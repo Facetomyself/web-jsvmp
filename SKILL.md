@@ -42,6 +42,8 @@ description: Web VMP / JSVMP 专用叶。父级 next 在 JS VM 挡住当前步�
 
 本技能内置 [工具链](references/toolchain.md)：统一 runtime event sink、严格 trace contract adapter、已声明 ISA 的 decoder、CFG/栈深检查、受限 JS emitter 与 fixture parity runner。sink 由目标专用 hook 在已知 handler/dispatcher 取值点调用；它不是通用自动 hook。默认字节 ISA 是教学/回归用；目标编码需提交 `--isa` 映射到工具当前支持的语义指令，未知 handler/副作用直接停住，不能猜填。RuyiTrace 3.3 的 `.opcode.bin` 只有偏移与 opcode 字节且 indexer 不展开；缺立即数/栈值不能凭关键词补 trace。
 
+外部符号执行、IR 矫正或 WASM 工具的可选 provenance envelope 见 [phase-extensions.md](references/phase-extensions.md)。它只校验阶段产物记录及哈希链接，不实现相应引擎、不新增 `jsvmBlocker` 或 dispatcher 状态，也不改变现有工具链 API。
+
 ## 输出与验收
 
 opcode_map、instruction_widths、disassembly、runtime_trace、request_fixture、parity_report；按需增加 `dispatch_evidence`、`dynamic_code_trace`、`layer_boundary`、`observation_integrity`。这些扩展字段只作为证据附件，不修改共享 manifest schema；按共享合同验证 coverage、trace_alignment、request_parity。每次采集须一并保存完整性 receipt；缺失/截断事件不得继续 lifting。

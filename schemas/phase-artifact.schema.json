@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Facetomyself/web-jsvmp/phase-artifact.schema.json",
+  "title": "Optional JSVMP phase artifact record",
+  "description": "A producer-supplied provenance record for optional symexec, IR correction, or WebAssembly analysis. It does not assert semantic correctness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "phase",
+    "status",
+    "claim_scope",
+    "inputs",
+    "tool",
+    "outputs",
+    "evidence",
+    "details",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "phase": { "enum": ["symexec", "irfix", "wasm-stage9"] },
+    "status": { "enum": ["produced", "partial", "blocked"] },
+    "claim_scope": { "enum": ["artifact-only", "trace-alignment-only", "fixture-only"] },
+    "inputs": { "$ref": "#/$defs/artifactRefs", "minItems": 1 },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "code_sha256"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonemptyString" },
+        "version": { "$ref": "#/$defs/nonemptyString" },
+        "code_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "outputs": { "$ref": "#/$defs/artifactRefs" },
+    "evidence": { "$ref": "#/$defs/artifactRefs" },
+    "details": { "type": "object" },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonemptyString" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "phase": { "const": "symexec" } }, "required": ["phase"] },
+      "then": {
+        "properties": {
+          "claim_scope": { "enum": ["artifact-only", "trace-alignment-only"] },
+          "details": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["trace_status", "event_count", "ir_format"],
+            "properties": {
+              "trace_status": { "enum": ["verified", "incomplete", "unknown"] },
+              "event_count": { "type": "integer", "minimum": 0 },
+              "ir_format": { "$ref": "#/$defs/nonemptyString" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "irfix" } }, "required": ["phase"] },
+      "then": {
+        "properties": {
+          "claim_scope": { "enum": ["artifact-only", "fixture-only"] },
+          "details": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["input_ir_sha256", "rules_sha256", "passes", "parity_status", "parity_report_sha256", "idempotence_status"],
+            "properties": {
+              "input_ir_sha256": { "$ref": "#/$defs/sha256" },
+              "rules_sha256": { "$ref": "#/$defs/sha256" },
+              "passes": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+              "parity_status": { "$ref": "#/$defs/parityStatus" },
+              "parity_report_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+              "idempotence_status": { "enum": ["not-run", "passed", "failed"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "wasm-stage9" } }, "required": ["phase"] },
+      "then": {
+        "properties": {
+          "claim_scope": { "enum": ["artifact-only", "fixture-only"] },
+          "details": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["module_sha256", "route", "parity_status", "parity_report_sha256"],
+            "properties": {
+              "module_sha256": { "$ref": "#/$defs/sha256" },
+              "route": { "$ref": "#/$defs/nonemptyString" },
+              "parity_status": { "$ref": "#/$defs/parityStatus" },
+              "parity_report_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonemptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "parityStatus": { "enum": ["not-run", "passed", "failed"] },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "sha256"],
+      "properties": {
+        "role": { "$ref": "#/$defs/nonemptyString" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifactRefs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactRef" },
+      "uniqueItems": true
+    }
+  }
+}

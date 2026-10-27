@@ -13,6 +13,7 @@
 - [分阶段分析](#分阶段分析)：按当前阻碍选择阶段，而非固定流水线。
 - [端到端合成演示](#端到端合成演示)：采集、normalize、lift、align 与 parity。
 - [CLI 与产物合同](#cli-与产物合同)：参数、报告字段、退出码与资源边界。
+- [可选阶段产物记录](references/phase-extensions.md)：symexec / IR 矫正 / WASM 侧产物的 provenance envelope。
 - [自定义 ISA 与语义](#自定义-isa-与语义)：支持的编码、指令及实现限制。
 - [宿主集成](#宿主集成)：gitlink、dispatcher、gate 与共享 validator。
 - [故障定位](#故障定位)、[开发与维护](#开发与维护)、[许可证与来源](#许可证与来源)。
@@ -152,7 +153,7 @@ python -c "import json; a=json.load(open('artifacts/add3/alignment.json',encodin
 
 ## CLI 与产物合同
 
-入口为 `python scripts/jsvmp_toolchain.py <command>`。字节码参数是**十六进制字符串本身**，不是文件路径；允许 `bytes.fromhex` 接受的空白，不接受 `0x` 前缀或 base64。所有输出路径均相对于当前工作目录解析。
+现有工具链入口为 `python scripts/jsvmp_toolchain.py <command>`。字节码参数是**十六进制字符串本身**，不是文件路径；允许 `bytes.fromhex` 接受的空白，不接受 `0x` 前缀或 base64。所有输出路径均相对于当前工作目录解析。可选的 `symexec`、`irfix`、`wasm-stage9` 记录校验是独立命令 `python scripts/phase_contracts.py <record.json>`；不改变以下命令参数或产物。
 
 | 命令 | 必填输入与参数 | 可选参数 | 主要产物 |
 | --- | --- | --- | --- |
