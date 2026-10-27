@@ -19,7 +19,7 @@
 
 ## 返回与升级
 
-观察闭合后回父 `web_case.py next`。Trace/fixture 齐备也不直接读取 opcode 执行：先由父 next 指向共享 gate，确认 `jsvm-verifiable` 与 `next_skill=web-jsvmp` 后再执行 handoff。缺证据则报告最小补采实验；不把一次插桩完成写成 deobfuscation pass。
+观察闭合后运行 `stage chaos-vm-instrument --trace <trace.ndjson> --receipt <collection.json> --out-dir <dir>`。截断、丢事件、身份不一致或只有调用计数时，回执是 `insufficient-evidence`，并且不会进入 opcode。采集通过只表示回执完整，不是语义恢复。
 
 ## 外部执行器
 

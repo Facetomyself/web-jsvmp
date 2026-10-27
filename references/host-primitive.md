@@ -14,10 +14,10 @@
 
 ## 停止条件
 
-同一输入 fixture、连续 3 次 host 差异实验仍未改变 token id 或任何目标边界字段时，回到父 `web_case.py next`，由父判断是否切阶段。已排除项写入失败谱系，不重复。
+同一输入 fixture、连续 3 次 host 差异实验仍未改变 token id 或任何目标边界字段时，把排除项写入失败谱系并停止。不在本阶段进入 opcode。
 
 ## 产物
 
 留下明文模板和字段顺序、每段 provenance、已经闭合的那一层规范化、以及 A1–A4 里对应的一句状态。缺的记未知。
 
-A1–A3 闭合时回到 `web-reverse`，由父 next 决定这一层纯算。不得写 `chain_accepted`，不得新开 profile。A4（明文钩不到，或原语本身被改写）只说明需要更深取证：保留缺口并回到父 `web_case.py next`；缺操作数/栈值或 fixture 时不能进入 opcode。只有父 next 指向 `deobfuscation_gate`、只读 gate 的 profile 为 `jsvm-verifiable` 且 next_skill 为 `web-jsvmp` 后，才按其 handoff 进入 [opcode-recovery.md](opcode-recovery.md)。
+A1–A3 闭合时写出阶段笔记并停止，不新开 profile。笔记用 `stage host-primitive --note <note.json> --out <receipt.json>`。`note.json` 必须是 `schema_version: 1`、`entered_opcode: false`，以及非空 `evidence_pointers`。A4（明文钩不到，或原语本身被改写）同样只保留缺口。缺操作数、栈值或 fixture 时不能进入 opcode。不得在笔记或回执里写 `chain_accepted`。

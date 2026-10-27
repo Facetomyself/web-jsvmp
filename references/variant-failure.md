@@ -22,4 +22,4 @@
 
 ## 和 opcode 阶段的关系
 
-槽位或位宽还没确认时，不进入会把未知填成默认值的还原。Trace 和 fixture 齐了，先回父 `web_case.py next`；只有它给出 `deobfuscation_gate` 且 gate 为 `jsvm-verifiable`、next_skill 为 `web-jsvmp` 后，才按 handoff 回到 [opcode-recovery.md](opcode-recovery.md)。本阶段不得单独把 `chain_accepted` 写成 true。
+槽位或位宽还没确认时，不进入会把未知填成默认值的还原。用 `stage variant-failure --note <note.json> --out <receipt.json>` 写出回执。笔记必须 `entered_opcode: false`。Trace 和 fixture 齐了也先停止，不在本阶段进入 opcode，也不写 `chain_accepted`。

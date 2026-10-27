@@ -1,6 +1,6 @@
 # 算法所在层分流
 
-本文件由 `host-primitive` 或 `interpreter-structure` 按需读取；不是可写进 `jsvmBlocker` 的独立阶段。产物回填原阶段，再回父 `web_case.py next`，不从本表直接跳转叶技能。
+本文件由 `host-primitive` 或 `interpreter-structure` 按需读取；不是独立阶段名。产物写回原阶段回执后停止。
 
 逐 opcode 是最后手段。先判断当前 VM 是算法本体、宿主调用壳，还是通往 WASM/内层 VM 的转发层。
 

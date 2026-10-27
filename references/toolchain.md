@@ -51,6 +51,19 @@ python scripts/jsvmp_toolchain.py run "<case-output>/lifted.js" "<fixture.json>"
 
 非零或 `passed=false` 不得升级。将 decoder/lifted output、runtime trace、fixture 和实际 parity report 收拢到原共享 manifest，仍通过 `web-deobfuscation` gate 与 validator。不要把 `fixture-only` 改写为 `request_parity` 已完成，除非另有真实请求边界对照。
 
+## 阶段回执
+
+`stage` 一次只做下表中的一个名字。它不写宿主 manifest，也不写 `chain_accepted`。
+
+```sh
+python scripts/jsvmp_toolchain.py stage interpreter-structure --source vm.js --out structure.json
+python scripts/jsvmp_toolchain.py stage chaos-vm-instrument --trace trace.ndjson --receipt collection.json --out-dir out/
+python scripts/jsvmp_toolchain.py stage opcode-recovery --trace trace.ndjson --receipt collection.json --bytecode-hex HEX --fixture fixture.json --out-dir out/ --node node
+python scripts/jsvmp_toolchain.py stage host-primitive --note note.json --out note-receipt.json
+```
+
+`variant-failure` 与 `ws-app-protocol` 使用和 `host-primitive` 相同的笔记形状：`schema_version` 为 1，`entered_opcode` 为 false，`evidence_pointers` 为非空字符串数组。`interpreter-structure` 只报告三类标记是否同时出现，不给出栈或寄存器结论。`opcode-recovery` 在对齐失败、栈效果不符或 fixture 失败时写 `insufficient-evidence`。要交给宿主验收时改跑 [project-adapter.md](project-adapter.md)，不要把阶段回执改名成 manifest。
+
 ## 合成负向回归
 
 `tests/fixtures/call_counter.invalid.json` 是人工构造的调用计数回执，不来自真实目标。它没有 opcode、operand、栈或固定输入；回归测试确保 normalize 将其拒绝为非 trace。该测试只验证错误输入拒绝，不是任何实际目标的恢复证据。

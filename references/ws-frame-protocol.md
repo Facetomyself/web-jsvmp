@@ -13,7 +13,7 @@
 
 ## 与 opcode-recovery 的边界
 
-本分支拆的是宿主协议帧，不是 VM 字节码。没有带操作数或栈值的 opcode trace 时，本分支不进入 opcode 验收；cmd 结构闭合后回父 `web_case.py next`。
+本分支拆的是协议帧，不是 VM 字节码。没有带操作数或栈值的 opcode trace 时，不进入 opcode。cmd 结构闭合后用 `stage ws-app-protocol --note <note.json> --out <receipt.json>` 写出 `entered_opcode: false` 的回执并停止。
 
 ## 附件格式
 

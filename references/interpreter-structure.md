@@ -34,4 +34,4 @@
 
 ## 停止
 
-分型写完仍不能做 opcode 验收。有带操作数或栈值的 Trace 和 fixture 之后，回父 `web_case.py next`；只有其给出 `deobfuscation_gate`，且 gate profile 为 `jsvm-verifiable`、next_skill 为 `web-jsvmp` 后，才按 handoff 进入 [opcode-recovery.md](opcode-recovery.md)。仅设置 `opcodeEvidence=true` 不是 gate 证据。
+分型写完仍不能做 opcode 验收。运行 `stage interpreter-structure --source <snapshot> --out <receipt.json>`，回执只记录标记是否齐，不写出栈式或寄存器式结论。标记不全时状态是 `insufficient-evidence`。有带操作数或栈值的 trace 和 fixture 之后再停，把回执交给调用方；不要在本阶段进入 opcode。

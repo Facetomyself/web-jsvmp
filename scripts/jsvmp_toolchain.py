@@ -287,6 +287,59 @@ def emit_js(decoded: dict[str, Any], function_name: str = "vm") -> str:
     return "function " + function_name + "(...args) {\n  const stack=[]; let pc=0, steps=0;\n  for (;;) {\n    if (++steps > 1000000) throw new Error('VM step limit');\n    switch (pc) {\n" + "\n".join(rows) + "\n      default: throw new Error('invalid pc '+pc);\n    }\n  }\n}\nmodule.exports = " + function_name + ";\n"
 
 
+def check_stack_effects(trace: dict[str, Any], decoded: dict[str, Any]) -> None:
+    """Refuse a trace whose stack depth does not match the declared canonical effect."""
+    static = {item["pc"]: item for item in decoded["instructions"]}
+    for event in trace["events"]:
+        inst = static.get(event.get("pc"))
+        if inst is None:
+            continue
+        pop_n, push_n = OPS[inst["opcode"]]["effect"]
+        before, after = event["stack_before"], event["stack_after"]
+        if len(before) < pop_n or len(after) != len(before) - pop_n + push_n:
+            raise ToolchainError(
+                f"first divergence at seq={event.get('seq')} pc={event.get('pc')}: stack effect mismatch"
+            )
+
+
+def structure_markers(source_text: str) -> dict[str, Any]:
+    """Count static marker families. Never emit a stack or register conclusion."""
+    groups = {
+        "dispatch_switch": "switch" in source_text and "case" in source_text,
+        "bytecode_container": "Uint8Array" in source_text or "bytecode" in source_text,
+        "fetch_loop": "while" in source_text and ("opcode" in source_text or "pc" in source_text),
+    }
+    complete = all(groups.values())
+    return {
+        "schema_version": 1,
+        "stage": "interpreter-structure",
+        "status": "markers-present" if complete else "insufficient-evidence",
+        "markers": groups,
+        "typed": False,
+        "claim_scope": "structure-markers-only" if complete else "insufficient-evidence",
+        "limits": ["marker presence does not prove stack, register, or opcode semantics"],
+    }
+
+
+def note_stage(stage: str, note_path: Path) -> dict[str, Any]:
+    """Accept an external evidence pointer only when it explicitly stays out of opcode recovery."""
+    note = load_json(note_path)
+    if not isinstance(note, dict) or note.get("schema_version") != 1 or note.get("entered_opcode") is not False:
+        raise ToolchainError("stage note must be schema_version 1 with entered_opcode false")
+    pointers = note.get("evidence_pointers")
+    if not isinstance(pointers, list) or not pointers or not all(isinstance(item, str) and item for item in pointers):
+        raise ToolchainError("evidence_pointers must be a nonempty list of strings")
+    return {
+        "schema_version": 1,
+        "stage": stage,
+        "status": "noted",
+        "entered_opcode": False,
+        "evidence_pointers": pointers,
+        "claim_scope": "not-opcode",
+        "limits": ["this stage records pointers only; it does not recover opcode semantics"],
+    }
+
+
 def run_js(js_path: Path, fixture_path: Path, output_path: Path, node: str) -> dict[str, Any]:
     fixture = load_json(fixture_path)
     if not isinstance(fixture, list) or not fixture: raise ToolchainError("fixture must be nonempty array of {args, expected}")
@@ -297,6 +350,50 @@ def run_js(js_path: Path, fixture_path: Path, output_path: Path, node: str) -> d
     report = {"schema_version": 1, "engine": "generated-js-in-node", "node_version": subprocess.run([node,"--version"],capture_output=True,text=True,encoding="utf-8").stdout.strip(), "generated_js_sha256": hashlib.sha256(js_path.read_bytes()).hexdigest(), "fixture_sha256": hashlib.sha256(fixture_path.read_bytes()).hexdigest(), "fixtures": rows, "passed": bool(rows) and all(r["pass"] for r in rows), "claim_scope": "fixture-only"}
     dump_json(output_path, report)
     return report
+
+
+NOTE_STAGES = ("host-primitive", "variant-failure", "ws-app-protocol")
+
+
+def opcode_recovery(trace: Path, receipt: Path, bytecode_hex: str, fixture: Path, out_dir: Path, isa: Path | None, node: str) -> dict[str, Any]:
+    """Run the bounded pipeline. A failed align, stack check, or fixture does not become a success receipt."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    normalized = normalize(trace, out_dir / "normalized.json", receipt)
+    decoded = decode(bytecode_hex, load_isa(isa))
+    cfg = build_cfg(decoded)
+    dump_json(out_dir / "disassembly.json", decoded)
+    dump_json(out_dir / "cfg.json", cfg)
+    (out_dir / "lifted.js").write_text(emit_js(decoded), encoding="utf-8", newline="\n")
+    alignment = align_trace(
+        normalized, decoded,
+        source_sha256=normalized["source_sha256"], vm_id=normalized["vm_id"], run_id=normalized["run_id"],
+    )
+    dump_json(out_dir / "alignment.json", alignment)
+    if not alignment["aligned"]:
+        raise ToolchainError("trace/disassembly alignment failed")
+    check_stack_effects(normalized, decoded)
+    parity = run_js(out_dir / "lifted.js", fixture, out_dir / "parity.json", node)
+    if not parity["passed"]:
+        raise ToolchainError("fixture parity failed")
+    opcodes: dict[str, str] = {}
+    widths: dict[str, int] = {}
+    for inst in decoded["instructions"]:
+        key = str(inst["opcode_byte"])
+        opcodes[key] = inst["opcode"]
+        widths[key] = inst["width"]
+    opcode_map = {"schema_version": 1, "opcodes": opcodes, "instruction_widths": widths}
+    dump_json(out_dir / "opcode_map.json", opcode_map)
+    return {
+        "schema_version": 1,
+        "stage": "opcode-recovery",
+        "status": "bounded-pipeline-passed",
+        "claim_scope": "partial",
+        "limits": [
+            "alignment is trace-instruction-alignment-only",
+            "parity is fixture-only",
+            "not algorithm-recovered",
+        ],
+    }
 
 
 def main() -> int:
@@ -313,6 +410,18 @@ def main() -> int:
     l.add_argument("bytecode_hex"); l.add_argument("--out-dir", required=True, type=Path); l.add_argument("--function", default="vm"); l.add_argument("--isa", type=Path)
     r = sub.add_parser("run", help="execute generated JS against fixtures and report parity")
     r.add_argument("js", type=Path); r.add_argument("fixture", type=Path); r.add_argument("--out", required=True, type=Path); r.add_argument("--node", default="node")
+    st = sub.add_parser("stage", help="write one stage receipt; does not sign host acceptance")
+    st.add_argument("name", choices=("interpreter-structure", "chaos-vm-instrument", "opcode-recovery", *NOTE_STAGES))
+    st.add_argument("--source", type=Path)
+    st.add_argument("--trace", type=Path)
+    st.add_argument("--receipt", type=Path)
+    st.add_argument("--bytecode-hex")
+    st.add_argument("--fixture", type=Path)
+    st.add_argument("--isa", type=Path)
+    st.add_argument("--note", type=Path)
+    st.add_argument("--out", type=Path)
+    st.add_argument("--out-dir", type=Path)
+    st.add_argument("--node", default="node")
     args = p.parse_args()
     try:
         if args.cmd == "normalize":
@@ -327,6 +436,55 @@ def main() -> int:
             dump_json(args.out_dir/"disassembly.json", dec); dump_json(args.out_dir/"cfg.json", cfg)
             (args.out_dir/"lifted.js").write_text(emit_js(dec,args.function), encoding="utf-8", newline="\n")
             result = {"status":"lifted", "instructions":len(dec["instructions"]), "blocks":cfg["coverage"]["total_blocks"], "outputs":["disassembly.json","cfg.json","lifted.js"]}
+        elif args.cmd == "stage":
+            if args.name == "interpreter-structure":
+                if args.source is None or args.out is None:
+                    raise ToolchainError("interpreter-structure requires --source and --out")
+                result = structure_markers(args.source.read_text(encoding="utf-8"))
+                dump_json(args.out, result)
+            elif args.name == "chaos-vm-instrument":
+                if args.trace is None or args.receipt is None or args.out_dir is None:
+                    raise ToolchainError("chaos-vm-instrument requires --trace, --receipt, and --out-dir")
+                args.out_dir.mkdir(parents=True, exist_ok=True)
+                try:
+                    normalize(args.trace, args.out_dir / "normalized.json", args.receipt)
+                except ToolchainError as exc:
+                    result = {
+                        "schema_version": 1, "stage": args.name, "status": "insufficient-evidence",
+                        "reason": str(exc), "claim_scope": "insufficient-evidence",
+                    }
+                    dump_json(args.out_dir / "stage-receipt.json", result)
+                    print(json.dumps(result, ensure_ascii=False))
+                    return 2
+                result = {
+                    "schema_version": 1, "stage": args.name, "status": "collection-accepted",
+                    "claim_scope": "collection-receipt-only",
+                    "limits": ["accepted collection is not opcode recovery"],
+                }
+                dump_json(args.out_dir / "stage-receipt.json", result)
+            elif args.name == "opcode-recovery":
+                if None in (args.trace, args.receipt, args.bytecode_hex, args.fixture, args.out_dir):
+                    raise ToolchainError("opcode-recovery requires --trace, --receipt, --bytecode-hex, --fixture, and --out-dir")
+                try:
+                    result = opcode_recovery(args.trace, args.receipt, args.bytecode_hex, args.fixture, args.out_dir, args.isa, args.node)
+                except ToolchainError as exc:
+                    result = {
+                        "schema_version": 1, "stage": args.name, "status": "insufficient-evidence",
+                        "reason": str(exc), "claim_scope": "insufficient-evidence",
+                    }
+                    args.out_dir.mkdir(parents=True, exist_ok=True)
+                    dump_json(args.out_dir / "stage-receipt.json", result)
+                    print(json.dumps(result, ensure_ascii=False))
+                    return 2
+                dump_json(args.out_dir / "stage-receipt.json", result)
+            else:
+                if args.note is None or args.out is None:
+                    raise ToolchainError(f"{args.name} requires --note and --out")
+                result = note_stage(args.name, args.note)
+                dump_json(args.out, result)
+            if result.get("status") == "insufficient-evidence":
+                print(json.dumps(result, ensure_ascii=False))
+                return 2
         else:
             result = run_js(args.js,args.fixture,args.out,args.node)
         print(json.dumps(result, ensure_ascii=False))

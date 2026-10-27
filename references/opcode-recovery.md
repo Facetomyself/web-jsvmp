@@ -27,14 +27,14 @@
 
 ## 产物与完成范围
 
-产出共享 manifest 要求的 opcode_map（含 opcodes、instruction_widths）、disassembly、runtime_trace、request_fixture、parity_report。parity 必须来自实际比较，不能写入一个人工 passed:true 当完成证据。
+共享 manifest 只由 [project-adapter.md](project-adapter.md) 写出，内含 opcode_map（含 opcodes、instruction_widths）、disassembly、runtime_trace、request_fixture、parity_report。parity 必须来自实际比较。不要手写 manifest，也不要写入人工 `passed: true`。适配器成功时 `claim_scope` 固定为 `partial`。
 
 只恢复一个调用边界时 scope 保持 partial。algorithm-recovered 必须另有目标算法域与副作用等价证据；单样本通过、VMProtect 资料或 RuyiTrace opcode 字节都不能外推完整 VM 语义。
 
 ## 退回
 
-缺操作数/栈状态、Trace 丢失或不稳定时返回上游取证，列出下一次最小实验；不改走 Windows vmp-reverse，不自动加载全部反混淆参考资料。gate 在 trace 没有操作数或栈标记时不会给出 `jsvm-verifiable`。
+缺操作数或栈状态、trace 丢失或不稳定时，`stage opcode-recovery` 写 `insufficient-evidence` 并停止。不改走 Windows vmp-reverse。没有操作数或栈标记的 trace 不能当成可验收 opcode。
 
 ## 按需案例
 
-动态版本、key builder 或多轮失败时，改读本 skill 的 [variant-failure.md](variant-failure.md)。那一阶段指向 `article/web-reverse/` 里的谱系文章。文章是 source-report，独立复现为 0，不能替代本次 Trace/fixture，也不复制进本文件。
+动态版本、key builder 或多轮失败时，改读本 skill 的 [variant-failure.md](variant-failure.md)。可选文章只作来源说明，缺失时以该阶段文档为准，不能替代本次 trace 或 fixture。

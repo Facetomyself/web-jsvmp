@@ -248,7 +248,7 @@ python scripts/jsvmp_toolchain.py run artifacts/add3/custom/lifted.js tests/fixt
 
 [交互集成图](docs/diagrams/integration.html) · [SVG](docs/diagrams/integration.svg) · [Archify 源文件](docs/diagrams/integration.json)
 
-独立 CLI 不需要宿主；[SKILL.md](SKILL.md) 中的完整案件调度依赖宿主组件。集成后，早期取证由 `web-reverse next → 当前 JSVMP 阶段 → 新证据 → next` 驱动；有 opcode trace 和 fixture 后，才由宿主分类 gate 准入有界恢复与共享 validator。不得把本地 `passed=true` 直接改写为宿主成功。
+独立 CLI 不需要宿主。阶段回执用 `python scripts/jsvmp_toolchain.py stage <name>`，说明见 [toolchain.md](references/toolchain.md)。交给宿主验收时只走 [project-adapter.md](references/project-adapter.md)，它不写 `chain_accepted`。宿主调度细节在 [host-integration.md](references/host-integration.md)。不得把本地 `passed=true` 直接改写为宿主成功。
 
 ### Gitlink 维护
 
