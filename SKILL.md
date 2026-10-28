@@ -11,7 +11,7 @@ description: Web VMP / JSVMP 专用叶。父级 next 在 JS VM 挡住当前步�
 
 ## 执行面
 
-一次只做一个阶段。读该阶段的一篇说明；命中其中写明的分支时再读对应的一篇，产物仍归原阶段。不要按阶段表从上到下做完。
+一次只做一个阶段。读该阶段的一篇说明；命中其中写明的分支时再读对应的一篇，产物仍归原阶段。不要按阶段表从上到下做完。父级调度与交接见 `docs/agent-architecture.md`；本技能不选择下一步。
 
 - 用 `python scripts/jsvmp_toolchain.py stage <name>` 写出该阶段回执。回执的 `status=insufficient-evidence` 就停止，不补默认 opcode。
 - 阶段名只有 `host-primitive`、`interpreter-structure`、`chaos-vm-instrument`、`opcode-recovery`、`variant-failure`、`ws-app-protocol`。没有 opcode、操作数和栈观察时，不要跑 `opcode-recovery`。
